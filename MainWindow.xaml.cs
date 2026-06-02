@@ -294,12 +294,14 @@ namespace ServiClean
         }
 
         // ─── Guardar (INSERT o UPDATE) ────────────────────────────────────────
-        private void BtnGuardar_Click(object sender, RoutedEventArgs e)
+private void BtnGuardar_Click(object sender, RoutedEventArgs e)
         {
+            // Verifica que haya una tabla seleccionada
             if (string.IsNullOrEmpty(_currentTable)) return;
+            // Obtiene la definición de la tabla (PK, autoPK, columnas)
             if (!_tables.TryGetValue(_currentTable, out var def)) return;
 
-            // Recoger valores del formulario
+            // Recorre los TextBox del formulario y guarda col → valor
             var values = new Dictionary<string, string>();
             foreach (StackPanel sp in wpForm.Children)
                 if (sp.Children[1] is TextBox tb && tb.Tag is string col)
@@ -313,26 +315,30 @@ namespace ServiClean
 
                 if (_isNewRecord)
                 {
-                    // INSERT
+                    // ── ALTA (INSERT) ──────────────────────────────────────────
                     var insertCols = new List<string>();
                     var insertParams = new List<string>();
 
-                    // PK manual (no auto-increment)
+                    // Si el PK NO es auto-increment el usuario lo escribe,
+                    // se incluye en el INSERT manualmente
                     if (!def.autoPk && values.TryGetValue(def.pk, out var pkVal) && !string.IsNullOrEmpty(pkVal))
                     {
                         insertCols.Add($"`{def.pk}`");
                         insertParams.Add($"@{def.pk}");
                     }
 
+                    // Agrega el resto de columnas editables
                     foreach (var col in def.cols)
                     {
                         insertCols.Add($"`{col}`");
                         insertParams.Add($"@{col}");
                     }
 
+                    // Construye: INSERT INTO `tabla` (`col1`,`col2`) VALUES (@col1,@col2)
                     string sql = $"INSERT INTO `{_currentTable}` ({string.Join(", ", insertCols)}) VALUES ({string.Join(", ", insertParams)})";
                     cmd = new MySqlCommand(sql, conn);
 
+                    // Asigna parámetros; si el campo está vacío envía NULL
                     if (!def.autoPk && values.ContainsKey(def.pk))
                         cmd.Parameters.AddWithValue($"@{def.pk}", NullIfEmpty(values[def.pk]));
 
@@ -341,7 +347,8 @@ namespace ServiClean
                 }
                 else
                 {
-                    // UPDATE
+                    // ── CAMBIO (UPDATE) ────────────────────────────────────────
+                    // Valida que haya un PK para saber qué fila actualizar
                     if (!values.TryGetValue(def.pk, out var pkVal) || string.IsNullOrEmpty(pkVal))
                     {
                         MessageBox.Show("Selecciona un registro para editar.", "Aviso");
@@ -354,6 +361,7 @@ namespace ServiClean
                         return;
                     }
 
+                    // Construye: UPDATE `tabla` SET `col1`=@col1, `col2`=@col2 WHERE `pk`=@pk
                     var setClauses = def.cols.Select(c => $"`{c}` = @{c}");
                     string sql = $"UPDATE `{_currentTable}` SET {string.Join(", ", setClauses)} WHERE `{def.pk}` = @pk";
                     cmd = new MySqlCommand(sql, conn);
@@ -363,7 +371,9 @@ namespace ServiClean
                         cmd.Parameters.AddWithValue($"@{col}", values.TryGetValue(col, out var v) ? NullIfEmpty(v) : DBNull.Value);
                 }
 
+                // Ejecuta el INSERT o UPDATE
                 cmd.ExecuteNonQuery();
+                // Recarga la tabla para reflejar los cambios
                 LoadTable(_currentTable);
                 MessageBox.Show(_isNewRecord ? "Registro insertado correctamente." : "Registro actualizado correctamente.", "Éxito");
                 _isNewRecord = false;
@@ -374,17 +384,20 @@ namespace ServiClean
             }
         }
 
-        // ─── Eliminar ─────────────────────────────────────────────────────────
         private void BtnEliminar_Click(object sender, RoutedEventArgs e)
         {
+            // Verifica tabla seleccionada y definición disponible
             if (string.IsNullOrEmpty(_currentTable)) return;
             if (!_tables.TryGetValue(_currentTable, out var def)) return;
+
+            // Verifica que haya una fila seleccionada en el DataGrid
             if (dgData.SelectedItem is not DataRowView row)
             {
                 MessageBox.Show("Selecciona un registro para eliminar.", "Aviso");
                 return;
             }
 
+            // Pide confirmación antes de eliminar
             if (MessageBox.Show("¿Eliminar este registro?", "Confirmar",
                 MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
 
@@ -392,14 +405,22 @@ namespace ServiClean
             {
                 using var conn = new MySqlConnection(_connStr);
                 conn.Open();
-                var cmd = new MySqlCommand($"DELETE FROM `{_currentTable}` WHERE `{def.pk}` = @pk", conn);
+
+                // Construye: DELETE FROM `tabla` WHERE `pk` = @pk
+                var cmd = new MySqlCommand(
+                    $"DELETE FROM `{_currentTable}` WHERE `{def.pk}` = @pk", conn);
+
+                // Toma el valor del PK de la fila seleccionada
                 cmd.Parameters.AddWithValue("@pk", row[def.pk]);
                 cmd.ExecuteNonQuery();
+
+                // Recarga la tabla para reflejar la eliminación
                 LoadTable(_currentTable);
                 MessageBox.Show("Registro eliminado.", "Éxito");
             }
             catch (Exception ex)
             {
+                // Si hay FK que dependen del registro MySQL lanzará error aquí
                 MessageBox.Show("Error al eliminar:\n" + ex.Message, "Error");
             }
         }
