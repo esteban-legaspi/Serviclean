@@ -1,12 +1,196 @@
-﻿<Window x:Class="Serviclean.MainWindow"
+<Window x:Class="ServiClean.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Serviclean"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="ServiClean" Height="720" Width="1280"
+        WindowStartupLocation="CenterScreen" Background="#1E1E2E">
 
-    </Grid>
+    <DockPanel LastChildFill="True">
+
+        <!-- ═══ TOP: Barra de conexión ═══ -->
+        <Border DockPanel.Dock="Top" Background="#181825" Padding="10,8">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="🖧" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBlock Text="Servidor:" Foreground="#CDD6F4" VerticalAlignment="Center" Margin="0,0,4,0" FontSize="12"/>
+                <TextBox x:Name="txtServer" Text="localhost" Width="110" Margin="0,0,10,0"
+                         Background="#313244" Foreground="#CDD6F4" BorderBrush="#45475A" Padding="4,2"/>
+                <TextBlock Text="Puerto:" Foreground="#CDD6F4" VerticalAlignment="Center" Margin="0,0,4,0" FontSize="12"/>
+                <TextBox x:Name="txtPort" Text="3306" Width="55" Margin="0,0,10,0"
+                         Background="#313244" Foreground="#CDD6F4" BorderBrush="#45475A" Padding="4,2"/>
+                <TextBlock Text="BD:" Foreground="#CDD6F4" VerticalAlignment="Center" Margin="0,0,4,0" FontSize="12"/>
+                <TextBox x:Name="txtDatabase" Text="serviclean" Width="110" Margin="0,0,10,0"
+                         Background="#313244" Foreground="#CDD6F4" BorderBrush="#45475A" Padding="4,2"/>
+                <TextBlock Text="Usuario:" Foreground="#CDD6F4" VerticalAlignment="Center" Margin="0,0,4,0" FontSize="12"/>
+                <TextBox x:Name="txtUser" Text="root" Width="80" Margin="0,0,10,0"
+                         Background="#313244" Foreground="#CDD6F4" BorderBrush="#45475A" Padding="4,2"/>
+                <TextBlock Text="Contraseña:" Foreground="#CDD6F4" VerticalAlignment="Center" Margin="0,0,4,0" FontSize="12"/>
+                <TextBox x:Name="txtPassword" Width="110" Margin="0,0,12,0"
+                         Background="#313244" Foreground="#CDD6F4" BorderBrush="#45475A" Padding="4,2"/>
+                <Button Content="Conectar" Click="BtnConectar_Click"
+                        Padding="14,4" Background="#89B4FA" Foreground="#1E1E2E"
+                        FontWeight="Bold" BorderBrush="Transparent" Cursor="Hand"/>
+                <TextBlock x:Name="lblStatus" VerticalAlignment="Center"
+                           Margin="14,0,0,0" FontWeight="Bold" FontSize="12"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ═══ LEFT: Navegación ═══ -->
+        <Border DockPanel.Dock="Left" Width="185" Background="#181825">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <!-- Tablas -->
+                    <TextBlock Text="TABLAS" Foreground="#6C7086" FontSize="10"
+                               FontWeight="Bold" Margin="12,14,0,6" />
+                    <ListBox x:Name="lstTablas" Background="Transparent" BorderThickness="0"
+                             SelectionChanged="LstTablas_SelectionChanged">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Foreground" Value="#BAC2DE"/>
+                                <Setter Property="Padding" Value="12,5"/>
+                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#313244"/>
+                                        <Setter Property="Foreground" Value="#89B4FA"/>
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#27273A"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBoxItem Content="Domicilio"/>
+                        <ListBoxItem Content="Empleado"/>
+                        <ListBoxItem Content="Cliente"/>
+                        <ListBoxItem Content="Contrato Servicio"/>
+                        <ListBoxItem Content="Auxiliar Limpieza"/>
+                        <ListBoxItem Content="Nomina"/>
+                        <ListBoxItem Content="Detalle Nomina"/>
+                        <ListBoxItem Content="Incidencia"/>
+                        <ListBoxItem Content="Contacto Cliente"/>
+                        <ListBoxItem Content="Factura"/>
+                        <ListBoxItem Content="Prospecto"/>
+                        <ListBoxItem Content="Comodin"/>
+                        <ListBoxItem Content="Comodin Contrato"/>
+                        <ListBoxItem Content="Prestamo Empleado"/>
+                        <ListBoxItem Content="Ahorro Empleado"/>
+                    </ListBox>
+
+                    <!-- Separator -->
+                    <Rectangle Height="1" Fill="#313244" Margin="12,8"/>
+
+                    <!-- Consultas -->
+                    <TextBlock Text="CONSULTAS" Foreground="#6C7086" FontSize="10"
+                               FontWeight="Bold" Margin="12,0,0,6"/>
+                    <ListBox x:Name="lstConsultas" Background="Transparent" BorderThickness="0"
+                             SelectionChanged="LstConsultas_SelectionChanged">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Foreground" Value="#BAC2DE"/>
+                                <Setter Property="Padding" Value="12,5"/>
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#313244"/>
+                                        <Setter Property="Foreground" Value="#A6E3A1"/>
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#27273A"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBoxItem Content="1. Nomina x empleado"/>
+                        <ListBoxItem Content="2. Nomina x empresa"/>
+                        <ListBoxItem Content="3. Cuentas x cobrar"/>
+                        <ListBoxItem Content="4. Incidencias diarias"/>
+                        <ListBoxItem Content="5. Incidencias semanales"/>
+                        <ListBoxItem Content="6. Incidencias mensuales"/>
+                        <ListBoxItem Content="7. Altas y Bajas IMSS"/>
+                        <ListBoxItem Content="8. Contratos x cliente"/>
+                        <ListBoxItem Content="9. Empleados x empresa"/>
+                        <ListBoxItem Content="10. Prospectos"/>
+                        <ListBoxItem Content="11. Incidencias recurrentes"/>
+                    </ListBox>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- ═══ BOTTOM: Formulario CRUD ═══ -->
+        <Border DockPanel.Dock="Bottom" x:Name="pnlForm" Visibility="Collapsed"
+                Background="#181825" BorderBrush="#313244" BorderThickness="0,1,0,0" Padding="12,10">
+            <StackPanel>
+                <TextBlock x:Name="lblFormTitle" Foreground="#89B4FA" FontWeight="Bold"
+                           FontSize="12" Margin="0,0,0,8"/>
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Height="70">
+                    <WrapPanel x:Name="wpForm" Orientation="Horizontal"/>
+                </ScrollViewer>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button Content="💾  Guardar" Click="BtnGuardar_Click"
+                            Padding="14,5" Margin="0,0,8,0"
+                            Background="#A6E3A1" Foreground="#1E1E2E"
+                            FontWeight="Bold" BorderBrush="Transparent" Cursor="Hand"/>
+                    <Button Content="🗑  Eliminar" Click="BtnEliminar_Click"
+                            Padding="14,5" Margin="0,0,8,0"
+                            Background="#F38BA8" Foreground="#1E1E2E"
+                            FontWeight="Bold" BorderBrush="Transparent" Cursor="Hand"/>
+                    <Button Content="➕  Nuevo" Click="BtnNuevo_Click"
+                            Padding="14,5" Margin="0,0,8,0"
+                            Background="#89DCEB" Foreground="#1E1E2E"
+                            FontWeight="Bold" BorderBrush="Transparent" Cursor="Hand"/>
+                    <Button Content="↺  Recargar" Click="BtnRecargar_Click"
+                            Padding="14,5"
+                            Background="#45475A" Foreground="#CDD6F4"
+                            BorderBrush="Transparent" Cursor="Hand"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ═══ CENTER: DataGrid ═══ -->
+        <Border Background="#1E1E2E" Padding="8">
+            <DataGrid x:Name="dgData"
+                      AutoGenerateColumns="True"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      SelectionChanged="DgData_SelectionChanged"
+                      Background="#1E1E2E"
+                      Foreground="#CDD6F4"
+                      BorderBrush="#313244"
+                      GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="#313244"
+                      RowBackground="#1E1E2E"
+                      AlternatingRowBackground="#27273A"
+                      ColumnHeaderHeight="32"
+                      RowHeight="28">
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="#313244"/>
+                        <Setter Property="Foreground" Value="#89B4FA"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="Padding" Value="8,0"/>
+                        <Setter Property="BorderBrush" Value="#45475A"/>
+                        <Setter Property="BorderThickness" Value="0,0,1,0"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+                <DataGrid.CellStyle>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Padding" Value="6,0"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#45475A"/>
+                                <Setter Property="Foreground" Value="#CDD6F4"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.CellStyle>
+            </DataGrid>
+        </Border>
+
+    </DockPanel>
 </Window>
