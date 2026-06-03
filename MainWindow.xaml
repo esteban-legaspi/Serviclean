@@ -166,7 +166,8 @@
                       RowBackground="#1E1E2E"
                       AlternatingRowBackground="#27273A"
                       ColumnHeaderHeight="32"
-                      RowHeight="28">
+                      RowHeight="28"
+                      AutoGeneratingColumn="DgData_AutoGeneratingColumn">
                 <DataGrid.ColumnHeaderStyle>
                     <Style TargetType="DataGridColumnHeader">
                         <Setter Property="Background" Value="#313244"/>

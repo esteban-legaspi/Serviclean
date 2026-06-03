@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Data;
 using MySqlConnector;
 
 namespace ServiClean
@@ -15,6 +16,7 @@ namespace ServiClean
         private string _connStr = "";
         private string _currentTable = "";
         private bool _isNewRecord = false;
+        private DataRowView? _selectedRow;
 
         // ─── Definición de tablas: (PK, es auto-increment, columnas sin PK) ──
         private readonly Dictionary<string, (string pk, bool autoPk, string[] cols)> _tables = new()
@@ -273,12 +275,22 @@ namespace ServiClean
         {
             if (dgData.SelectedItem is not DataRowView row) return;
             _isNewRecord = false;
+            _selectedRow = row; // guardamos la fila original
 
             foreach (StackPanel sp in wpForm.Children)
             {
                 if (sp.Children[1] is TextBox tb && tb.Tag is string col)
                 {
-                    try { tb.Text = row[col]?.ToString() ?? ""; }
+                    try
+                    {
+                        var val = row[col];
+                        if (val is DateTime dt)
+                            tb.Text = dt.ToString("yyyy-MM-dd");
+                        else if (val is bool b)
+                            tb.Text = b ? "1" : "0";  // mostrar como 1/0 para evitar confusión
+                        else
+                            tb.Text = val?.ToString() ?? "";
+                    }
                     catch { tb.Text = ""; }
                 }
             }
@@ -348,7 +360,6 @@ private void BtnGuardar_Click(object sender, RoutedEventArgs e)
                 else
                 {
                     // ── CAMBIO (UPDATE) ────────────────────────────────────────
-                    // Valida que haya un PK para saber qué fila actualizar
                     if (!values.TryGetValue(def.pk, out var pkVal) || string.IsNullOrEmpty(pkVal))
                     {
                         MessageBox.Show("Selecciona un registro para editar.", "Aviso");
@@ -361,14 +372,30 @@ private void BtnGuardar_Click(object sender, RoutedEventArgs e)
                         return;
                     }
 
-                    // Construye: UPDATE `tabla` SET `col1`=@col1, `col2`=@col2 WHERE `pk`=@pk
                     var setClauses = def.cols.Select(c => $"`{c}` = @{c}");
                     string sql = $"UPDATE `{_currentTable}` SET {string.Join(", ", setClauses)} WHERE `{def.pk}` = @pk";
                     cmd = new MySqlCommand(sql, conn);
                     cmd.Parameters.AddWithValue("@pk", pkVal);
 
                     foreach (var col in def.cols)
-                        cmd.Parameters.AddWithValue($"@{col}", values.TryGetValue(col, out var v) ? NullIfEmpty(v) : DBNull.Value);
+                    {
+                        string textVal = values.TryGetValue(col, out var v) ? v : "";
+
+                        // Si el campo está vacío, usar el valor original de la BD
+                        // Esto evita mandar NULL en FKs y fechas no modificadas
+                        if (string.IsNullOrEmpty(textVal) && _selectedRow != null)
+                        {
+                            var original = _selectedRow[col];
+                            if (original is DateTime dt)
+                                cmd.Parameters.AddWithValue($"@{col}", dt.ToString("yyyy-MM-dd"));
+                            else
+                                cmd.Parameters.AddWithValue($"@{col}", original ?? DBNull.Value);
+                        }
+                        else
+                        {
+                            cmd.Parameters.AddWithValue($"@{col}", NullIfEmpty(textVal));
+                        }
+                    }
                 }
 
                 // Ejecuta el INSERT o UPDATE
@@ -433,7 +460,32 @@ private void BtnGuardar_Click(object sender, RoutedEventArgs e)
         }
 
         // ─── Utilidad: vacío → NULL ───────────────────────────────────────────
-        private static object NullIfEmpty(string val) =>
-            string.IsNullOrEmpty(val) ? DBNull.Value : (object)val;
+        private static object NullIfEmpty(string val)
+        {
+            if (string.IsNullOrEmpty(val)) return DBNull.Value;
+
+            // Convierte True/False/true/false → 1/0 para MySQL boolean
+            if (val.Equals("True", StringComparison.OrdinalIgnoreCase)) return 1;
+            if (val.Equals("False", StringComparison.OrdinalIgnoreCase)) return 0;
+
+            return (object)val;
+        }
+
+        private void DgData_AutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
+        {
+            // Si la columna es de tipo fecha, aplicar formato solo día-mes-año
+            if (e.PropertyType == typeof(DateTime) || e.PropertyType == typeof(DateTime?))
+            {
+                var col = new DataGridTextColumn
+                {
+                    Header = e.Column.Header,
+                    Binding = new System.Windows.Data.Binding(e.PropertyName)
+                    {
+                        StringFormat = "yyyy-MM-dd"
+                    }
+                };
+                e.Column = col;
+            }
+        }
     }
 }
